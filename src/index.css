@@ -55,3 +55,10 @@ body {
   font-family:Impact, Haettenschweiler, 'Arial Narrow Bold', sans-serif;
   font-size: 50px;
 }
+
+.fruit {
+  position: absolute;
+  background-color: green;
+  width: 20px;
+  height: 20px;
+}

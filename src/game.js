@@ -10,6 +10,8 @@ function game() {
 
   let enemy1Array = [];
 
+  let fruitArray = [];
+
   const playerElement = document.getElementById("player");
   playerElement.style.width = player.size + "px";
   playerElement.style.height = player.size + "px";
@@ -32,11 +34,13 @@ function game() {
         updateEnemy(enemy1Array, playArea, gametime);
     
         enemyCollision(enemy1Array);
-        //playerCollision(player, enemy1Array, gamestate);
+        playerCollision(player, enemy1Array, gamestate);
     
         updatePlayer(player, playArea, keypressed, playerElement);
 
-        updateScore(gametime, gamestate, enemy1Array, player, playArea)
+        spawnFruits(gametime, fruitArray, playArea);
+        updateScore(gametime, gamestate, enemy1Array, playArea, player, keypressed);
+        fruitColletion(player, fruitArray, gamestate)
         }
     }
 
@@ -158,13 +162,13 @@ function updateEnemy(enemy1Array, playArea, gametime) {
 }
 
 function spawnEnemy(gametime, enemy1Array, playArea) {
-  if (gametime % 2000 == 0 || gametime == 1) {
+  if (gametime % 2800 == 0 || gametime == 1) {
     enemy1Array.push(new Enemy(0, 0, 40, 0.5));
 
     let i = enemy1Array.length - 1;
 
-    enemy1Array[i].x = randomInt(playArea.x - enemy1Array[i].size + 10) - 5;
-    enemy1Array[i].y = randomInt(playArea.y - enemy1Array[i].size + 10) - 5;
+    enemy1Array[i].x = getRandomInt(enemy1Array[i].size, playArea.x - (enemy1Array[i].size + 10));
+    enemy1Array[i].y = getRandomInt(enemy1Array[i].size, playArea.y - (enemy1Array[i].size + 10));
     enemy1Array[i].id = enemy1Array.length - 1;
 
     let para = document.createElement("div");
@@ -196,8 +200,18 @@ class Enemy {
   }
 }
 
-function randomInt(max) {
-  return Math.floor(Math.random() * max);
+class Fruit{
+  constructor(x, y, size) {
+    this.x = x;
+    this.y = y;
+    this.size = size;
+  }
+}
+
+function getRandomInt(min, max) {
+  min = Math.ceil(min);
+  max = Math.floor(max);
+  return Math.floor(Math.random() * (max - min) + min); //The maximum is exclusive and the minimum is inclusive
 }
 
 function getRandomArbitrary(min, max) {
@@ -214,13 +228,10 @@ function enemyCollision(enemy1Array) {
   for (let self of enemy1Array) {
     for (let i of enemy1Array) {
       if (!(self.id == i.id) && self.hitCooldown == 0) {
-        if (i.x + i.size >= self.x && i.x + i.size <= self.x + self.size) {
+        if (i.x + i.size >= self.x && i.x <= self.x + self.size) {
           if (
-            i.y + i.size >= self.y &&
-            i.y + i.size <= self.y + self.size &&
-            i.y <= self.y + self.size &&
-            i.y + i.size >= self.size
-          ) {
+            i.y + i.size >= self.y && i.y <= self.y + self.size)
+            {
             self.hitCooldown = 400;
             self.xMovement *= 1.1;
             self.yMovement *= 1.1;
@@ -235,17 +246,13 @@ function enemyCollision(enemy1Array) {
   }
 }
 
-function playerCollision(player, enemy1Array, gamestate, playArea) {
+function playerCollision(player, enemy1Array, gamestate) {
         for (let i of enemy1Array) {
           if (i.hitCooldown == 0) {
-            if (i.x + i.size >= player.x && i.x + i.size <= player.x + player.size) {
+            if (i.x + i.size >= player.x && i.x <= player.x + player.size) {
               if (
-                i.y + i.size >= player.y &&
-                i.y + i.size <= player.y + player.size &&
-                i.y <= player.y + player.size &&
-                i.y + i.size >= player.size
+                i.y + i.size >= player.y && i.y <= player.y + player.size
               ) {
-                  console.log("hit");
                   gamestate.death = true;
                   console.log(gamestate.death);
               }
@@ -254,13 +261,17 @@ function playerCollision(player, enemy1Array, gamestate, playArea) {
       }
 }
 
-function updateScore(gametime, gamestate, enemy1Array, player) {
+function updateScore(gametime, gamestate, enemy1Array, playArea, player, keypressed) {
     if (gametime % 10 == 0) {
-        let newScore = Math.round((gametime / (gametime * .95)) * enemy1Array[0].speed * enemy1Array.length);
+        let newScore = Math.round((gametime / (gametime * .8)) * (enemy1Array[0].speed * 2) * enemy1Array.length);
 
 
-        if (player.x > 250 && player.x < 350 && player.y > 250 && player.y < 350) {
+        if (player.x > playArea.x/2.4 && player.x < playArea.x - (playArea.x/2.4) && player.y > playArea.y/2.4 && player.y < playArea.y - (playArea.y/2.4)) {
             newScore *= 4;
+        }
+
+        if ((keypressed.left == true && keypressed.right != true) || (keypressed.up == true && keypressed.down != true) || (keypressed.right == true && keypressed.left != true) || (keypressed.down == true && keypressed.up != true)) {
+          newScore *= 10;
         }
         gamestate.score += newScore
     }
@@ -277,3 +288,48 @@ function updateScore(gametime, gamestate, enemy1Array, player) {
 function numDigits(x) {
     return (Math.log10((x ^ (x >> 31)) - (x >> 31)) | 0) + 1;
   }
+
+  function spawnFruits(gametime, fruitArray, playArea) {
+    if (gametime % 1200 == 0 && fruitArray[0] === undefined) {
+      console.log("spawned fruit");
+  
+      fruitArray.push(new Fruit(0, 0, 20));
+
+      fruitArray[0].x = getRandomInt(fruitArray[0].size + 10, playArea.x - (fruitArray[0].size + 10));
+      fruitArray[0].y = getRandomInt(fruitArray[0].size + 10, playArea.y - (fruitArray[0].size + 10));
+
+      let para = document.createElement("div");
+      para.classList.add("fruit");
+      para.setAttribute("id", "fruit");
+
+      para.style.left = fruitArray[0].x + "px";
+      para.style.top = fruitArray[0].y + "px";
+
+      para.style.width = fruitArray[0].size + "px";
+      para.style.height = fruitArray[0].size + "px";
+
+    document.getElementById("container").appendChild(para);
+    }
+  }
+
+  function fruitColletion(player, fruitArray, gamestate) {
+    for (let i of fruitArray) {
+      if (i.x + i.size >= player.x && i.x <= player.x + player.size) {
+        if (
+          i.y + i.size >= player.y && i.y <= player.y + player.size
+        ) {
+
+            fruitArray.pop();
+            let container = document.getElementById("container");
+            let child = document.getElementById("fruit");
+
+            container.removeChild(child);
+            
+            console.log("gone");
+
+            gamestate.score =  Math.round(gamestate.score * 1.2);
+
+          }
+        }
+  }
+}
