@@ -31,16 +31,21 @@ function game() {
         {
         gametime++;
         spawnEnemy(gametime, enemy1Array, playArea);
+
+        playerCollision(player, enemy1Array, gamestate);
+        
         updateEnemy(enemy1Array, playArea, gametime);
     
         enemyCollision(enemy1Array);
-        playerCollision(player, enemy1Array, gamestate);
+        
     
         updatePlayer(player, playArea, keypressed, playerElement);
 
         spawnFruits(gametime, fruitArray, playArea);
-        updateScore(gametime, gamestate, enemy1Array, playArea, player, keypressed);
         fruitColletion(player, fruitArray, gamestate)
+
+        updateScore(gametime, gamestate, enemy1Array, playArea, player, keypressed);
+        
         }
     }
 
